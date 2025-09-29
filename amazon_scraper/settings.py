@@ -56,6 +56,11 @@ DOWNLOADER_MIDDLEWARES = {
 PROXY_POOL_ENABLED = True
 PROXY_POOL_BAN_POLICY = 'amazon_scraper.policy.BanDetectionPolicy'
 
+# Custom proxy settings
+CUSTOM_PROXY_ENABLED = True
+CUSTOM_PROXY_FILE = 'proxies.json'
+CUSTOM_PROXY_UPDATE_INTERVAL = 3600  # 1 hour in seconds
+
 # Configure retry settings
 RETRY_ENABLED = True
 RETRY_TIMES = 5
