@@ -14,18 +14,40 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performing at the same time
-CONCURRENT_REQUESTS = 2
+CONCURRENT_REQUESTS = 1
+CONCURRENT_REQUESTS_PER_DOMAIN = 1
+CONCURRENT_REQUESTS_PER_IP = 1
 
-# Configure a delay for requests for the same website (default: 0)
-DOWNLOAD_DELAY = 2
+# Configure delays and randomization
+DOWNLOAD_DELAY = 3
+RANDOMIZE_DOWNLOAD_DELAY = True
+DOWNLOAD_TIMEOUT = 15
 
-# Enable or disable cookies
+# Enable and configure cookies
 COOKIES_ENABLED = True
+COOKIES_DEBUG = False
+
+# Add custom headers
+DEFAULT_REQUEST_HEADERS = {
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'DNT': '1',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1',
+}
 
 # Enable or disable downloader middlewares
 DOWNLOADER_MIDDLEWARES = {
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-    'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
+    'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
+    'amazon_scraper.middlewares.CustomRetryMiddleware': 550,
+    'amazon_scraper.middlewares.CustomUserAgentMiddleware': 400,
+    'amazon_scraper.middlewares.RotateHeadersMiddleware': 410,
     'scrapy_proxy_pool.middlewares.ProxyPoolMiddleware': 610,
     'scrapy_proxy_pool.middlewares.BanDetectionMiddleware': 620,
 }
