@@ -3,6 +3,7 @@ import webbrowser
 import sqlite3
 import threading
 import time
+import random
 from datetime import datetime
 from tracker import AmazonAPI
 import amazon_config
@@ -41,11 +42,28 @@ def run():
     amazon_config.MIN_PRICE = min_price
     amazon_config.MAX_PRICE = max_price
     amazon_config.FILTERS = {'min': min_price, 'max': max_price}
+    
     print("Starting data fetch...")
-    amazon = AmazonAPI(name, amazon_config.FILTERS, amazon_config.BASE_URL, amazon_config.CURRENCY)
-    data = amazon.run()
+    max_attempts = 3
+    data = None
+    
+    for attempt in range(max_attempts):
+        try:
+            amazon = AmazonAPI(name, amazon_config.FILTERS, amazon_config.BASE_URL, amazon_config.CURRENCY)
+            data = amazon.run()
+            if data:  # If we got data successfully, break the retry loop
+                break
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed: {str(e)}")
+            if attempt < max_attempts - 1:  # If not the last attempt
+                wait_time = (2 ** attempt) + random.uniform(1, 3)
+                print(f"Waiting {wait_time:.2f} seconds before retry...")
+                time.sleep(wait_time)
+            continue
+    
     if data is None:
         data = []
+        print("All attempts to fetch data failed.")
     print(f"Data fetch complete. Scraped {len(data)} products")
     # Always save to JSON file for display
     import json
