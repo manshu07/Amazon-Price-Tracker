@@ -1,4 +1,4 @@
-# Pet Food Price Tracker
+# Amazon(India) Price Tracker
 
 A desktop application to track pet food prices from Amazon India with a web-based interface.
 
