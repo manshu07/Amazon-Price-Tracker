@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Food Price Tracker Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-4">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h1 class="h4 mb-0">Pet Food Price Tracker Results</h1>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <input type="text" class="form-control me-2" id="search" placeholder="Search products, sellers, or pet type..." onkeyup="filterTable()" style="flex: 1;">
+                    <button class="btn btn-success" onclick="exportCSV()">Export to CSV</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="productsTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Type of Product</th>
+                                <th>Weight</th>
+                                <th>Current Price</th>
+                                <th>Pet</th>
+                                <th>Seller</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Data will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let products = [];
+
+        async function loadData() {
+            try {
+                const response = await fetch('/api/products');
+                products = await response.json();
+                displayProducts(products);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('tableBody').innerHTML = '<tr><td colspan="6">No data available</td></tr>';
+            }
+        }
+
+        function displayProducts(prods) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            if (prods.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No data found. Try different search criteria.</td></tr>';
+                return;
+            }
+            prods.forEach(product => {
+                const row = `<tr>
+                    <td>${product.product_name || 'N/A'}</td>
+                    <td>${product.type_of_product || 'N/A'}</td>
+                    <td>${product.weight || 'N/A'}</td>
+                    <td>${product.current_price || 'N/A'}</td>
+                    <td>${product.pet || 'N/A'}</td>
+                    <td>${product.seller || 'N/A'}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const filtered = products.filter(product =>
+                product.product_name.toLowerCase().includes(searchTerm) ||
+                product.seller.toLowerCase().includes(searchTerm) ||
+                product.pet.toLowerCase().includes(searchTerm)
+            );
+            displayProducts(filtered);
+        }
+
+        function exportCSV() {
+            if (products.length === 0) {
+                alert('No data to export');
+                return;
+            }
+            const headers = ['product_name', 'type_of_product', 'weight', 'current_price', 'pet', 'seller'];
+            let csvContent = headers.join(',') + '\n';
+            products.forEach(product => {
+                const row = headers.map(h => `"${product[h] || ''}"`);
+                csvContent += row.join(',') + '\n';
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'pet_food_data.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        window.onload = loadData;
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

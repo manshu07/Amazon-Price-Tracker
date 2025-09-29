@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Food Price Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        input { margin-bottom: 10px; padding: 5px; width: 300px; }
+    </style>
+</head>
+<body>
+    <h1>Pet Food Price Tracker</h1>
+    <input type="text" id="search" placeholder="Search products..." onkeyup="filterTable()">
+    <table id="productsTable">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Type of Product</th>
+                <th>Weight</th>
+                <th>Current Price</th>
+                <th>Pet</th>
+                <th>Seller</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Data will be inserted here -->
+        </tbody>
+    </table>
+
+    <script>
+        let products = [];
+
+        async function loadData() {
+            try {
+                const response = await fetch('reports/pet food.json');
+                const data = await response.json();
+                products = data.products || [];
+                displayProducts(products);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('tableBody').innerHTML = '<tr><td colspan="6">No data available</td></tr>';
+            }
+        }
+
+        function displayProducts(prods) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            prods.forEach(product => {
+                const row = `<tr>
+                    <td>${product.product_name}</td>
+                    <td>${product.type_of_product}</td>
+                    <td>${product.weight}</td>
+                    <td>${product.current_price}</td>
+                    <td>${product.pet}</td>
+                    <td>${product.seller}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const filtered = products.filter(product =>
+                product.product_name.toLowerCase().includes(searchTerm) ||
+                product.seller.toLowerCase().includes(searchTerm) ||
+                product.pet.toLowerCase().includes(searchTerm)
+            );
+            displayProducts(filtered);
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>

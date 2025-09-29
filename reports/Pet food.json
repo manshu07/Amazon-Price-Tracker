@@ -1,0 +1,40 @@
+{
+  "reports": [
+    {
+      "title": "pet food",
+      "date": "29/09/2025 14:45:14",
+      "best_item": null,
+      "currency": "\u20b9",
+      "filters": {
+        "min": "200",
+        "max": "10000"
+      },
+      "base_link": "https://www.amazon.in/",
+      "products": null
+    },
+    {
+      "title": "pet food",
+      "date": "29/09/2025 15:05:59",
+      "best_item": null,
+      "currency": "\u20b9",
+      "filters": {
+        "min": "200",
+        "max": "10000"
+      },
+      "base_link": "https://www.amazon.in/",
+      "products": null
+    },
+    {
+      "title": "Pet food",
+      "date": "29/09/2025 15:06:44",
+      "best_item": null,
+      "currency": "\u20b9",
+      "filters": {
+        "min": "200",
+        "max": "10000"
+      },
+      "base_link": "https://www.amazon.in/",
+      "products": null
+    }
+  ]
+}
