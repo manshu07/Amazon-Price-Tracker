@@ -33,6 +33,28 @@ init_db()
 def index():
     return render_template('form.html')
 
+def scrape_with_selenium(name, min_price, max_price):
+    """Try scraping with Selenium first"""
+    amazon = AmazonAPI(name, {'min': min_price, 'max': max_price}, amazon_config.BASE_URL, amazon_config.CURRENCY)
+    return amazon.run()
+
+def scrape_with_scrapy(name, min_price, max_price):
+    """Fall back to Scrapy if Selenium fails"""
+    from amazon_scraper.run_spider import run_spider
+    try:
+        run_spider(
+            search_term=name,
+            min_price=min_price,
+            max_price=max_price,
+            max_pages=5
+        )
+        # Read the results from the JSON file
+        with open('latest_data.json', 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Scrapy scraping failed: {e}")
+        return None
+
 @app.route('/run', methods=['POST'])
 def run():
     name = request.form['name'].replace(' ', '_')
@@ -44,26 +66,35 @@ def run():
     amazon_config.FILTERS = {'min': min_price, 'max': max_price}
     
     print("Starting data fetch...")
-    max_attempts = 3
     data = None
     
+    # Try Selenium first
+    print("Attempting to scrape with Selenium...")
+    max_attempts = 2
     for attempt in range(max_attempts):
         try:
-            amazon = AmazonAPI(name, amazon_config.FILTERS, amazon_config.BASE_URL, amazon_config.CURRENCY)
-            data = amazon.run()
-            if data:  # If we got data successfully, break the retry loop
+            data = scrape_with_selenium(name, min_price, max_price)
+            if data:
+                print("Successfully scraped with Selenium")
                 break
         except Exception as e:
-            print(f"Attempt {attempt + 1} failed: {str(e)}")
-            if attempt < max_attempts - 1:  # If not the last attempt
-                wait_time = (2 ** attempt) + random.uniform(1, 3)
-                print(f"Waiting {wait_time:.2f} seconds before retry...")
-                time.sleep(wait_time)
-            continue
+            print(f"Selenium attempt {attempt + 1} failed: {str(e)}")
+            if attempt < max_attempts - 1:
+                time.sleep(random.uniform(2, 4))
+    
+    # If Selenium failed, try Scrapy
+    if not data:
+        print("Selenium failed, attempting to scrape with Scrapy...")
+        try:
+            data = scrape_with_scrapy(name, min_price, max_price)
+            if data:
+                print("Successfully scraped with Scrapy")
+        except Exception as e:
+            print(f"Scrapy scraping failed: {str(e)}")
     
     if data is None:
         data = []
-        print("All attempts to fetch data failed.")
+        print("All scraping attempts failed.")
     print(f"Data fetch complete. Scraped {len(data)} products")
     # Always save to JSON file for display
     import json

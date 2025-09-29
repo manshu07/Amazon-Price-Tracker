@@ -185,14 +185,74 @@ class AmazonAPI:
         finally:
             self.driver.quit()
 
+    def get_page_links(self):
+        """Get product links from current page"""
+        links = []
+        try:
+            # Wait for search results to load
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-component-type="s-search-result"]'))
+            )
+            
+            selectors = [
+                'div[data-component-type="s-search-result"] h2 a',
+                'div.s-result-item h2 a',
+                'div.sg-col-inner h2 a',
+                'div[data-component-type="s-search-result"] .a-link-normal.s-no-outline'
+            ]
+            
+            for selector in selectors:
+                results = self.driver.find_elements(By.CSS_SELECTOR, selector)
+                if results:
+                    links = [link.get_attribute('href') for link in results if link.get_attribute('href')]
+                    links = [link for link in links if '/dp/' in link]
+                    break
+            
+            return links
+        except Exception as e:
+            print(f"Error getting links from page: {e}")
+            return links
+
+    def has_next_page(self):
+        """Check if there's a next page of results"""
+        try:
+            next_button = self.driver.find_element(By.CSS_SELECTOR, '.s-pagination-next:not(.s-pagination-disabled)')
+            return bool(next_button)
+        except:
+            return False
+
+    def go_to_next_page(self):
+        """Navigate to the next page"""
+        try:
+            next_button = self.driver.find_element(By.CSS_SELECTOR, '.s-pagination-next')
+            if next_button:
+                self.random_delay()
+                next_button.click()
+                self.verify_page_loaded()
+                self.random_delay()
+                return True
+            return False
+        except:
+            return False
+
     def get_products_info(self, links):
         asins = self.get_asins(links)
         products = []
-        for asin in asins:
-            product = self.get_single_product_info(asin, asins.index(asin))
+        max_products = 20  # Limit total products to avoid detection
+        
+        for i, asin in enumerate(asins):
+            if i >= max_products:
+                print(f"Reached maximum product limit ({max_products})")
+                break
+                
+            product = self.get_single_product_info(asin, i)
             if product:
                 products.append(product)
-        print(f"Pr: {products}")
+            
+            # Add delay between product scraping
+            self.random_delay()
+            
+        print(f"Successfully scraped {len(products)} products")
         return products
 
     def get_single_product_info(self, asin, index):
